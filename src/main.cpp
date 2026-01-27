@@ -4,6 +4,7 @@
 #include "tables.hpp"
 
 #include <iostream>
+#include <mutex>
 #include <vector>
 
 void calculateEliminations(const Dict &answers, const Dict &guesses, double *total_eliminations);
@@ -72,6 +73,8 @@ void calculateEliminations(const Dict &answers, const Dict &guesses, double *tot
 	std::cout << std::endl;
 }
 
+std::mutex total_eliminations_mutex;
+
 void calculateEliminationsForAnswer(
 	const char *answer,
 	const Dict &guesses,
@@ -88,8 +91,11 @@ void calculateEliminationsForAnswer(
 		for (int g2_index = g1_index + 1; g2_index < guesses.getLength(); g2_index++)
 		{
 			int eliminations = eliminationsCounter.getEliminations(data_table[g1_index] + data_table[g2_index]);
-			total_eliminations[g1_index] += eliminations;
-			total_eliminations[g2_index] += eliminations;
+			{
+				std::lock_guard<std::mutex> lock(total_eliminations_mutex);
+				total_eliminations[g1_index] += eliminations;
+				total_eliminations[g2_index] += eliminations;
+			}
 			logger.logCompletedIteration();
 		}
 		logger.displayProgress();
