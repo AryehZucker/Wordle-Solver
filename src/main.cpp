@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <mutex>
+#include <thread>
 #include <vector>
 
 void calculateEliminations(const Dict &answers, const Dict &guesses, double *total_eliminations);
@@ -67,11 +68,25 @@ void calculateEliminations(const Dict &answers, const Dict &guesses, double *tot
 
 	std::cout << "Beginning combinatorial calculations..." << std::endl;
 	Logger logger(answers, guesses);
-	const char *answer;
-	while ((answer = nextAnswer(answers)) != nullptr)
+
+	std::vector<std::thread> threads;
+	unsigned int num_threads = std::thread::hardware_concurrency();
+	std::cout << "Using " << num_threads << " threads" << std::endl;
+	for (unsigned int i = 0; i < num_threads; i++)
 	{
-        calculateEliminationsForAnswer(answer, guesses, eliminationsCounter, total_eliminations, logger);
-    }
+		threads.emplace_back([&answers, &guesses, &eliminationsCounter, total_eliminations, &logger]{
+			const char *answer;
+			while ((answer = nextAnswer(answers)) != nullptr)
+			{
+				calculateEliminationsForAnswer(answer, guesses, eliminationsCounter, total_eliminations, logger);
+			}
+		});
+	}
+
+	for (auto &thread : threads)
+	{
+		thread.join();
+	}
 
 	std::cout << std::endl;
 }
