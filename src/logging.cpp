@@ -15,11 +15,14 @@ Logger::Logger(const Dict &answers, const Dict &guesses)
 
 void Logger::logCompletedIteration()
 {
+    std::lock_guard<std::mutex> lock(mutex);
     completed_iterations++;
 }
 
 void Logger::displayProgress()
 {
+    std::lock_guard<std::mutex> lock(mutex);
+
     if (difftime(time(NULL), last_print_time) < 1)
         return;
 
