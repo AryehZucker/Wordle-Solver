@@ -2,7 +2,10 @@
 #define TABLES_H
 
 #include "dictionary.hpp"
+#include "feedback.hpp"
 
+#include <mutex>
+#include <unordered_map>
 #include <vector>
 
 #define MIN(a,b) ((a)<(b)?(a):(b))
@@ -34,6 +37,8 @@ private:
 	struct DataA *answers_data;
 	int countEliminations(const Feedback &feedback);
 	void wordToData(const char *word, struct DataA *data);
+	std::unordered_map<Feedback, int, FeedbackHasher> cache;
+	std::mutex cache_mutex;
 public:
 	int getEliminations(const Feedback &feedback);
 	EliminationsCounter(const Dict &answers);

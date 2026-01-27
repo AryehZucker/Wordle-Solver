@@ -27,7 +27,6 @@
 #include "feedback.hpp"
 #include "utils.hpp"
 
-#include <unordered_map>
 #include <vector>
 
 void EliminationsCounter::wordToData(const char *word, struct DataA *data){
@@ -62,12 +61,20 @@ void genDataTable(const char *ans, const Dict &guesses, std::vector<Feedback> &t
 }
 
 int EliminationsCounter::getEliminations(const Feedback &feedback){
-	static std::unordered_map<Feedback, int, FeedbackHasher> cache;
+	{
+		std::lock_guard<std::mutex> lock(cache_mutex);
+		if (cache.find(feedback) != cache.end())
+			return cache[feedback];
+	}
 
-	if (cache.find(feedback) != cache.end())
-		return cache[feedback];
+	int eliminations = countEliminations(feedback);
 
-	return cache[feedback] = countEliminations(feedback);
+	{
+		std::lock_guard<std::mutex> lock(cache_mutex);
+		cache[feedback] = eliminations;
+	}
+
+	return eliminations;
 }
 
 
