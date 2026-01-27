@@ -73,8 +73,6 @@ void calculateEliminations(const Dict &answers, const Dict &guesses, double *tot
 	std::cout << std::endl;
 }
 
-std::mutex total_eliminations_mutex;
-
 void calculateEliminationsForAnswer(
 	const char *answer,
 	const Dict &guesses,
@@ -82,6 +80,7 @@ void calculateEliminationsForAnswer(
 	double *total_eliminations,
 	Logger &logger)
 {
+	static std::mutex total_eliminations_mutex;
 	std::vector<Feedback> data_table;
 	data_table.reserve(guesses.getLength());
 
