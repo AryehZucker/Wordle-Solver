@@ -11,6 +11,8 @@ void calculateEliminations(const Dict &answers, const Dict &guesses, double *tot
 
 void calculateEliminationsForAnswer(const char *answer, const Dict &guesses, EliminationsCounter &eliminationsCounter, double *total_eliminations, Logger &logger);
 
+const char *nextAnswer(const Dict &answers);
+
 int main(int argc, char *argv[]){
 	double *total_eliminations;
 	int best_words[100];
@@ -65,12 +67,32 @@ void calculateEliminations(const Dict &answers, const Dict &guesses, double *tot
 
 	std::cout << "Beginning combinatorial calculations..." << std::endl;
 	Logger logger(answers, guesses);
-	for(int ans_index = 0; ans_index < answers.getLength(); ans_index++){
-		const char *answer = answers.getWord(ans_index);
+	const char *answer;
+	while ((answer = nextAnswer(answers)) != nullptr)
+	{
         calculateEliminationsForAnswer(answer, guesses, eliminationsCounter, total_eliminations, logger);
     }
 
 	std::cout << std::endl;
+}
+
+const char *nextAnswer(const Dict &answers)
+{
+	static std::mutex mutex;
+	static int next = 0;
+
+	int current;
+	{
+		std::lock_guard<std::mutex> lock(mutex);
+		current = next++;
+	}
+
+	if (current >= answers.getLength())
+	{
+		return nullptr;
+	}
+	
+	return answers.getWord(current);
 }
 
 void calculateEliminationsForAnswer(
