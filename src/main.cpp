@@ -6,9 +6,9 @@
 #include <iostream>
 #include <vector>
 
-
 void calculateEliminations(const Dict &answers, const Dict &guesses, double *total_eliminations);
 
+void calculateEliminationsForAnswer(const char *answer, const Dict &guesses, EliminationsCounter &eliminationsCounter, double *total_eliminations, Logger &logger);
 
 int main(int argc, char *argv[]){
 	double *total_eliminations;
@@ -60,27 +60,38 @@ int main(int argc, char *argv[]){
 
 
 void calculateEliminations(const Dict &answers, const Dict &guesses, double *total_eliminations){
-	int eliminations;
-
 	EliminationsCounter eliminationsCounter(answers);
-
-	std::vector<Feedback> data_table;
-	data_table.reserve(guesses.getLength());
 
 	std::cout << "Beginning combinatorial calculations..." << std::endl;
 	Logger logger(answers, guesses);
 	for(int ans_index = 0; ans_index < answers.getLength(); ans_index++){
-		genDataTable(answers.getWord(ans_index), guesses, data_table);
-		for(int g1_index=0; g1_index < guesses.getLength()-1; g1_index++){
-			for(int g2_index=g1_index+1; g2_index < guesses.getLength(); g2_index++){
-				eliminations = eliminationsCounter.getEliminations(data_table[g1_index] + data_table[g2_index]);
-				total_eliminations[g1_index] += eliminations;
-				total_eliminations[g2_index] += eliminations;
-				logger.logCompletedIteration();
-			}
-			logger.displayProgress();
-		}
-	}
+		const char *answer = answers.getWord(ans_index);
+        calculateEliminationsForAnswer(answer, guesses, eliminationsCounter, total_eliminations, logger);
+    }
 
 	std::cout << std::endl;
+}
+
+void calculateEliminationsForAnswer(
+	const char *answer,
+	const Dict &guesses,
+	EliminationsCounter &eliminationsCounter,
+	double *total_eliminations,
+	Logger &logger)
+{
+	std::vector<Feedback> data_table;
+	data_table.reserve(guesses.getLength());
+
+	genDataTable(answer, guesses, data_table);
+	for (int g1_index = 0; g1_index < guesses.getLength() - 1; g1_index++)
+	{
+		for (int g2_index = g1_index + 1; g2_index < guesses.getLength(); g2_index++)
+		{
+			int eliminations = eliminationsCounter.getEliminations(data_table[g1_index] + data_table[g2_index]);
+			total_eliminations[g1_index] += eliminations;
+			total_eliminations[g2_index] += eliminations;
+			logger.logCompletedIteration();
+		}
+		logger.displayProgress();
+	}
 }
